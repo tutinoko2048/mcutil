@@ -29,7 +29,6 @@ jobs:
       - name: Update npm
         run: npm install -g npm@latest
 
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -38,3 +37,6 @@ jobs:
 
       - name: Publish package
         run: pnpm publish
+
+      - name: Create GitHub Release
+        run: gh release create ${{ github.ref_name }} --notes "Release ${{ github.ref_name }}"
