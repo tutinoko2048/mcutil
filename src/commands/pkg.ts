@@ -1,24 +1,42 @@
 import { Command } from "commander";
 import inquirer, { DistinctQuestion } from "inquirer";
 import semver from "semver";
-import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-
-type PackageManager = "pnpm" | "npm" | "yarn" | "bun";
+import { installPackage } from "@antfu/install-pkg";
 
 type PackageJson = {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
 };
 
+interface PackageInfo {
+  name: string;
+  dev: boolean;
+}
+
 const PACKAGES = [
-  "@minecraft/server",
-  "@minecraft/server-ui",
-  "@minecraft/server-net",
-  "@minecraft/server-admin",
-  "@minecraft/vanilla-data",
-];
+  {
+    name: "@minecraft/server",
+    dev: true,
+  },
+  {
+    name: "@minecraft/server-ui",
+    dev: true,
+  },
+  {
+    name: "@minecraft/server-net",
+    dev: true,
+  },
+  {
+    name: "@minecraft/server-admin",
+    dev: true,
+  },
+  {
+    name: "@minecraft/vanilla-data",
+    dev: false,
+  },
+] as const satisfies PackageInfo[];
 
 const CATEGORY_ORDER = [
   "release",
@@ -93,118 +111,6 @@ function getCurrentVersion(pkgJson: PackageJson, name: string): string | null {
   return pkgJson.dependencies?.[name] ?? pkgJson.devDependencies?.[name] ?? null;
 }
 
-async function detectPackageManagers(cwd: string): Promise<PackageManager[]> {
-  const checks: Array<{ name: PackageManager; files: string[] }> = [
-    { name: "pnpm", files: ["pnpm-lock.yaml"] },
-    { name: "npm", files: ["package-lock.json"] },
-    { name: "yarn", files: ["yarn.lock"] },
-    { name: "bun", files: ["bun.lock", "bun.lockb"] },
-  ];
-
-  const matches: PackageManager[] = [];
-  await Promise.all(
-    checks.map(async (check) => {
-      for (const file of check.files) {
-        try {
-          await fs.access(path.join(cwd, file));
-          matches.push(check.name);
-          break;
-        } catch {
-          continue;
-        }
-      }
-    })
-  );
-
-  return matches;
-}
-
-async function resolvePackageManager(cwd: string): Promise<PackageManager> {
-  const matches = await detectPackageManagers(cwd);
-  if (matches.length === 1) {
-    return matches[0];
-  }
-
-  const questions: DistinctQuestion<{ manager: PackageManager }>[] = [
-    {
-      name: "manager",
-      type: "select",
-      message: "Select package manager:",
-      choices: [
-        { name: "pnpm", value: "pnpm" },
-        { name: "npm", value: "npm" },
-        { name: "yarn", value: "yarn" },
-        { name: "bun", value: "bun" },
-      ],
-    },
-  ];
-
-  const { manager } = await inquirer.prompt<{ manager: PackageManager }>(
-    questions
-  );
-  return manager;
-}
-
-function buildInstallCommand(
-  manager: PackageManager,
-  packages: string[]
-): { command: string; args: string[] } {
-  const baseCommand =
-    process.platform === "win32" ? `${manager}.cmd` : manager;
-  switch (manager) {
-    case "pnpm":
-      return { command: baseCommand, args: ["add", ...packages] };
-    case "yarn":
-      return { command: baseCommand, args: ["add", ...packages] };
-    case "bun":
-      return { command: baseCommand, args: ["add", ...packages] };
-    case "npm":
-    default:
-      return { command: baseCommand, args: ["install", ...packages] };
-  }
-}
-
-async function runInstall(
-  manager: PackageManager,
-  packages: string[]
-): Promise<void> {
-  if (packages.length === 0) {
-    return;
-  }
-
-  const { command, args } = buildInstallCommand(manager, packages);
-
-  const spawnCommand =
-    process.platform === "win32" ? "cmd.exe" : command;
-  const spawnArgs =
-    process.platform === "win32"
-      ? ["/d", "/s", "/c", toWindowsCommand([command, ...args])]
-      : args;
-
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn(spawnCommand, spawnArgs, { stdio: "inherit" });
-    child.on("close", (code) => {
-      if (code === 0) {
-        resolve();
-        return;
-      }
-      reject(new Error(`${command} exited with code ${code ?? "unknown"}`));
-    });
-    child.on("error", reject);
-  });
-}
-
-function toWindowsCommand(parts: string[]): string {
-  return parts.map(quoteWindowsArg).join(" ");
-}
-
-function quoteWindowsArg(value: string): string {
-  if (!/[\s"^&|<>]/.test(value)) {
-    return value;
-  }
-  return `"${value.replace(/"/g, '\\"')}"`;
-}
-
 function groupVersionsByCategory(versions: string[]): Map<VersionCategory, string[]> {
   const grouped = new Map<VersionCategory, string[]>();
   for (const version of versions) {
@@ -219,14 +125,14 @@ function groupVersionsByCategory(versions: string[]): Map<VersionCategory, strin
   return grouped;
 }
 
-async function promptForPackage(pkgJson: PackageJson): Promise<string | null> {
-  const choices = PACKAGES.map((name) => {
-    const current = getCurrentVersion(pkgJson, name);
-    const label = current ? `${name} (current: ${current})` : `${name} (current: -)`;
-    return { name: label, value: name };
+async function promptForPackage(pkgJson: PackageJson): Promise<PackageInfo | null> {
+  const choices = PACKAGES.map((pkg) => {
+    const current = getCurrentVersion(pkgJson, pkg.name);
+    const label = current ? `${pkg.name} (current: ${current})` : `${pkg.name} (current: -)`;
+    return { name: label, value: pkg };
   });
 
-  const questions: DistinctQuestion<{ target: string }>[] = [
+  const questions: DistinctQuestion<{ target: PackageInfo }>[] = [
     {
       name: "target",
       type: "select",
@@ -235,7 +141,7 @@ async function promptForPackage(pkgJson: PackageJson): Promise<string | null> {
     },
   ];
 
-  const { target } = await inquirer.prompt<{ target: string }>(questions);
+  const { target } = await inquirer.prompt<{ target: PackageInfo }>(questions);
   return target ?? null;
 }
 
@@ -295,7 +201,6 @@ export async function runPkgFlow(): Promise<void> {
   const cwd = process.cwd();
   try {
     const pkgJson = await readPackageJson(cwd);
-    const manager = await resolvePackageManager(cwd);
 
     const target = await promptForPackage(pkgJson);
     if (!target) {
@@ -303,15 +208,16 @@ export async function runPkgFlow(): Promise<void> {
       return;
     }
 
-    const currentVersion = getCurrentVersion(pkgJson, target);
+    const currentVersion = getCurrentVersion(pkgJson, target.name);
     const currentCategory = inferCategoryFromCurrentVersion(currentVersion);
-    const versions = await fetchPackageVersions(target);
+    const versions = await fetchPackageVersions(target.name);
     const grouped = groupVersionsByCategory(versions);
-    const category = await promptForCategory(target, grouped, currentCategory);
+    const category = await promptForCategory(target.name, grouped, currentCategory);
     const list = grouped.get(category) ?? [];
-    const version = await promptForVersion(target, list);
+    const version = await promptForVersion(target.name, list);
 
-    await runInstall(manager, [`${target}@${version}`]);
+    await installPackage(target.name, { silent: false, cwd, dev: target.dev });
+
   } catch (error) {
     const err = error as NodeJS.ErrnoException;
     console.error(err.message ?? String(err));

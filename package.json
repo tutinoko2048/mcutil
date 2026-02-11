@@ -28,8 +28,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@minecraft/server": "2.6.0-beta.1.26.0-stable",
-    "@minecraft/server-ui": "2.1.0-beta.1.26.0-stable",
+    "@antfu/install-pkg": "^1.1.0",
     "commander": "^14.0.3",
     "inquirer": "^13.2.2",
     "semver": "^7.7.4"
