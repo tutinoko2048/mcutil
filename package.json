@@ -14,9 +14,12 @@
     "start": "node dist/cli.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "author": "tutinoko2048",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tutinoko2048/mcutil.git"
+  },
   "packageManager": "pnpm@10.25.0",
   "devDependencies": {
     "@types/node": "^25.2.3",
