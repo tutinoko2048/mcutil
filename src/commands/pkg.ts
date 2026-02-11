@@ -94,18 +94,18 @@ function getCurrentVersion(pkgJson: PackageJson, name: string): string | null {
 }
 
 async function detectPackageManagers(cwd: string): Promise<PackageManager[]> {
-  const checks: Array<{ name: PackageManager; file: string }> = [
-    { name: "pnpm", file: "pnpm-lock.yaml" },
-    { name: "npm", file: "package-lock.json" },
-    { name: "yarn", file: "yarn.lock" },
-    { name: "bun", file: "bun.lockb" },
+  const checks: Array<{ name: PackageManager; files: string[] }> = [
+    { name: "pnpm", files: ["pnpm-lock.yaml"] },
+    { name: "npm", files: ["package-lock.json"] },
+    { name: "yarn", files: ["yarn.lock"] },
+    { name: "bun", files: ["bun.lock", "bun.lockb"] },
   ];
 
   const matches: PackageManager[] = [];
   await Promise.all(
     checks.map(async (check) => {
       try {
-        await fs.access(path.join(cwd, check.file));
+        await Promise.all(check.files.map(file => fs.access(path.join(cwd, file))));
         matches.push(check.name);
       } catch {
         return;
