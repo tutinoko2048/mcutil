@@ -104,11 +104,14 @@ async function detectPackageManagers(cwd: string): Promise<PackageManager[]> {
   const matches: PackageManager[] = [];
   await Promise.all(
     checks.map(async (check) => {
-      try {
-        await Promise.all(check.files.map(file => fs.access(path.join(cwd, file))));
-        matches.push(check.name);
-      } catch {
-        return;
+      for (const file of check.files) {
+        try {
+          await fs.access(path.join(cwd, file));
+          matches.push(check.name);
+          break;
+        } catch {
+          continue;
+        }
       }
     })
   );
