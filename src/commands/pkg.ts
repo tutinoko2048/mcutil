@@ -33,8 +33,16 @@ const PACKAGES = [
     dev: true,
   },
   {
+    name: "@minecraft/diagnostics",
+    dev: true,
+  },
+  {
     name: "@minecraft/vanilla-data",
     dev: false,
+  },
+  {
+    name: "@minecraft/server-gametest",
+    dev: true,
   },
 ] as const satisfies PackageInfo[];
 
