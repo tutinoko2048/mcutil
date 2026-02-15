@@ -1,6 +1,6 @@
 {
   "name": "@tutinoko2048/mcutil",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "",
   "type": "module",
   "main": "dist/cli.mjs",
