@@ -224,12 +224,19 @@ export async function runPkgFlow(): Promise<void> {
     const list = grouped.get(category) ?? [];
     const version = await promptForVersion(target.name, list);
 
-    await installPackage(target.name, { silent: false, cwd, dev: target.dev });
+    await installPackage(
+      `${target.name}@${version}`,
+      { silent: false, cwd, dev: target.dev, additionalArgs: ['-E'] }
+    );
 
-  } catch (error) {
-    const err = error as NodeJS.ErrnoException;
-    console.error(err.message ?? String(err));
-    process.exitCode = 1;
+  } catch (error: any) {
+    if (error.name === "ExitPromptError") {
+      console.log("Installation cancelled.");
+      process.exit(0);
+    }
+
+    console.error(error);
+    process.exit(1);
   }
 }
 

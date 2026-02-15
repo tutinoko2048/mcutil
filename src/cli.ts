@@ -37,7 +37,15 @@ program.action(async () => {
     },
   ];
 
-  const { feature } = await inquirer.prompt<MenuAnswers>(questions);
+  const { feature } = await inquirer.prompt<MenuAnswers>(questions)
+    .catch((error) => {
+      if (error.name === "ExitPromptError") {
+        process.exit(0);
+      }
+
+      console.error(error);
+      process.exit(1);
+    });
 
   if (feature === "link") {
     await runLinkFlow();

@@ -109,17 +109,14 @@ export async function runLinkFlow(): Promise<void> {
 
     await createSymlink(cwd, linkPath);
     console.log(`Created symlink: ${linkPath} -> ${cwd}`);
-  } catch (error) {
-    const err = error as NodeJS.ErrnoException;
-    const permissionMessage = formatPermissionError(err);
-    if (permissionMessage) {
-      console.error(permissionMessage);
-      process.exitCode = 1;
-      return;
+  } catch (error: any) {
+    if (error.name === "ExitPromptError") {
+      console.log("Linking cancelled.");
+      process.exit(0);
     }
 
-    console.error(err.message ?? String(err));
-    process.exitCode = 1;
+    console.error(error);
+    process.exit(1);
   }
 }
 
