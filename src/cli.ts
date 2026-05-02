@@ -31,8 +31,8 @@ program.action(async () => {
       type: "select",
       message: "Select a core feature:",
       choices: [
-        { name: "link", value: "link" },
         { name: "pkg", value: "pkg" },
+        { name: "link", value: "link" },
       ],
     },
   ];
