@@ -5,7 +5,6 @@ import path from 'node:path';
 import { installPackage } from '@antfu/install-pkg';
 import { compareVersion, fetchPackageVersions } from './sort';
 import { categorizeVersion, PackageInfo, PACKAGES } from './packages';
-import { group } from 'node:console';
 
 type PackageJson = {
   dependencies?: Record<string, string>;

@@ -63,13 +63,6 @@ async function createSymlink(targetDir: string, linkPath: string): Promise<void>
   await fs.symlink(targetDir, linkPath, 'dir');
 }
 
-function formatPermissionError(error: NodeJS.ErrnoException): string | null {
-  if (error.code === 'EPERM' || error.code === 'EACCES') {
-    return 'Permission denied. Please run this command as Administrator.';
-  }
-  return null;
-}
-
 export async function runLinkFlow(): Promise<void> {
   const cwd = process.cwd();
   try {

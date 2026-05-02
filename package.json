@@ -23,7 +23,8 @@
     "watch": "vp pack --watch",
     "start": "node dist/cli.mjs",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "vp fmt"
+    "format": "vp fmt",
+    "prepare": "vp config"
   },
   "dependencies": {
     "@antfu/install-pkg": "^1.1.0",
