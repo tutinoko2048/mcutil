@@ -1,8 +1,8 @@
-import { Command } from "commander";
-import inquirer, { DistinctQuestion } from "inquirer";
-import fs from "node:fs/promises";
-import path from "node:path";
-import { installPackage } from "@antfu/install-pkg";
+import { Command } from 'commander';
+import inquirer, { DistinctQuestion } from 'inquirer';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { installPackage } from '@antfu/install-pkg';
 import { compareVersion, fetchPackageVersions } from './sort';
 import { categorizeVersion, PackageInfo, PACKAGES } from './packages';
 import { group } from 'node:console';
@@ -13,8 +13,8 @@ type PackageJson = {
 };
 
 async function readPackageJson(cwd: string): Promise<PackageJson> {
-  const pkgPath = path.join(cwd, "package.json");
-  const raw = await fs.readFile(pkgPath, "utf8");
+  const pkgPath = path.join(cwd, 'package.json');
+  const raw = await fs.readFile(pkgPath, 'utf8');
   return JSON.parse(raw) as PackageJson;
 }
 
@@ -31,9 +31,9 @@ async function promptForPackage(pkgJson: PackageJson): Promise<PackageInfo | nul
 
   const questions: DistinctQuestion<{ target: PackageInfo }>[] = [
     {
-      name: "target",
-      type: "select",
-      message: "Select package:",
+      name: 'target',
+      type: 'select',
+      message: 'Select package:',
       choices,
     },
   ];
@@ -45,12 +45,14 @@ async function promptForPackage(pkgJson: PackageJson): Promise<PackageInfo | nul
 async function promptForCategory<T extends Record<string, string[]>>(
   pkg: PackageInfo,
   grouped: T,
-  currentCategory?: keyof T
+  currentCategory?: keyof T,
 ): Promise<keyof T> {
-  const choices = pkg.categories.filter(c => grouped[c]?.length).map((category) => {
-    const latest = grouped[category as keyof T]?.[0] ?? "-";
-    return { name: `${category} (latest: ${latest})`, value: category };
-  });
+  const choices = pkg.categories
+    .filter((c) => grouped[c]?.length)
+    .map((category) => {
+      const latest = grouped[category as keyof T]?.[0] ?? '-';
+      return { name: `${category} (latest: ${latest})`, value: category };
+    });
 
   const defaultValue =
     currentCategory && choices.some((choice) => choice.value === currentCategory)
@@ -58,8 +60,8 @@ async function promptForCategory<T extends Record<string, string[]>>(
       : undefined;
 
   const question: DistinctQuestion<{ category: keyof T }> = {
-    name: "category",
-    type: "select",
+    name: 'category',
+    type: 'select',
     message: `Select release category for ${pkg.name}:`,
     choices,
     ...(defaultValue ? { default: defaultValue } : {}),
@@ -67,20 +69,15 @@ async function promptForCategory<T extends Record<string, string[]>>(
 
   const questions: DistinctQuestion<{ category: keyof T }>[] = [question];
 
-  const { category } = await inquirer.prompt<{ category: keyof T }>(
-    questions
-  );
+  const { category } = await inquirer.prompt<{ category: keyof T }>(questions);
   return category;
 }
 
-async function promptForVersion(
-  pkgName: string,
-  versions: string[]
-): Promise<string> {
+async function promptForVersion(pkgName: string, versions: string[]): Promise<string> {
   const questions: DistinctQuestion<{ version: string }>[] = [
     {
-      name: "version",
-      type: "select",
+      name: 'version',
+      type: 'select',
       message: `Select version for ${pkgName}:`,
       choices: versions.map((version) => ({ name: version, value: version })),
       pageSize: 6,
@@ -99,7 +96,7 @@ export async function runPkgFlow(): Promise<void> {
 
     const target = await promptForPackage(pkgJson);
     if (!target) {
-      console.log("No package selected.");
+      console.log('No package selected.');
       return;
     }
 
@@ -125,14 +122,15 @@ export async function runPkgFlow(): Promise<void> {
     const selectedGroup = grouped[category] ?? [];
     const selectedVersion = await promptForVersion(target.name, selectedGroup);
 
-    await installPackage(
-      `${target.name}@${selectedVersion}`,
-      { silent: false, cwd, dev: target.dev, additionalArgs: ['-E'] }
-    );
-
+    await installPackage(`${target.name}@${selectedVersion}`, {
+      silent: false,
+      cwd,
+      dev: target.dev,
+      additionalArgs: ['-E'],
+    });
   } catch (error: any) {
-    if (error.name === "ExitPromptError") {
-      console.log("Installation cancelled.");
+    if (error.name === 'ExitPromptError') {
+      console.log('Installation cancelled.');
       process.exit(0);
     }
 
@@ -143,7 +141,7 @@ export async function runPkgFlow(): Promise<void> {
 
 export function registerPkgCommand(program: Command): void {
   program
-    .command("pkg")
-    .description("Install Minecraft type definition packages")
+    .command('pkg')
+    .description('Install Minecraft type definition packages')
     .action(runPkgFlow);
 }

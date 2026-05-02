@@ -7,6 +7,7 @@ Minecraft Bedrock Edition（統合版）のアドオン開発を支援するCLI�
 ## 機能
 
 ### 🔗 `link`
+
 現在のフォルダをMinecraftの開発用リソースパック/ビヘイビアパックフォルダへリンクします。
 Windowsの `mklink /D` 相当の処理を行うため、即座に実機で確認できるようになります。
 
@@ -15,6 +16,7 @@ Windowsの `mklink /D` 相当の処理を行うため、即座に実機で確認
 - **注意**: シンボリックリンクの作成には**管理者権限**が必要です。
 
 ### 📦 `pkg`
+
 `@minecraft/server` などの主要パッケージのバージョン管理を支援します。
 
 - npmレジストリからバージョン一覧を取得し、以下のカテゴリごとに分類およびソートして表示します：
@@ -25,11 +27,13 @@ Windowsの `mklink /D` 相当の処理を行うため、即座に実機で確認
 ## 使い方
 
 ### インストール
+
 ```bash
 npm install -g @tutinoko2048/mcutil
 ```
 
 ### 実行
+
 ```bash
 # 対話モードで機能を選択
 mcutil
@@ -42,5 +46,6 @@ mcutil pkg
 ```
 
 ## 動作環境
+
 - Windows (Minecraft Bedrock Edition)
 - Node.js
